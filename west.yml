@@ -163,6 +163,8 @@ manifest:
       path: modules/crypto/mbedtls
       groups:
         - crypto
+    # Our forked version of mcuboot, which contains support for
+    # mcuboot_secondary on external SPI flash
     - name: mcuboot
       repo-path: sdk-mcuboot
       remote: aclima
