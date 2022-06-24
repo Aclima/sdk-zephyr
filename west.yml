@@ -21,6 +21,8 @@ manifest:
   remotes:
     - name: upstream
       url-base: https://github.com/zephyrproject-rtos
+    - name: aclima
+      url-base: git@github.com:Aclima
 
   #
   # Please add items below based on alphabetical order
@@ -168,7 +170,9 @@ manifest:
       groups:
         - crypto
     - name: mcuboot
-      revision: 399720d1cabd26c4356445d351f263b31e942961
+      repo-path: sdk-mcuboot
+      remote: aclima
+      revision: v1.8.99-ncs1-fdcba57
       path: bootloader/mcuboot
     - name: mipi-sys-t
       path: modules/debug/mipi-sys-t
