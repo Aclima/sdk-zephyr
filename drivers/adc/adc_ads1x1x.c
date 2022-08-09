@@ -150,7 +150,8 @@ enum {
 };
 
 struct ads1x1x_config {
-	struct i2c_dt_spec bus;
+	//struct i2c_dt_spec bus;
+	const struct device *bus;
 	const uint32_t odr_delay[8];
 	uint8_t resolution;
 	bool multiplexer;
@@ -176,10 +177,9 @@ static int ads1x1x_read_reg(const struct device *dev, enum ads1x1x_reg reg_addr,
 	uint16_t reg_val;
 	int ret;
 
-	ret = i2c_burst_read_dt(&config->bus, reg_addr, (uint8_t *)&reg_val, sizeof(reg_val));
+	ret = i2c_burst_read(config->bus, 0x48, reg_addr, (uint8_t *)&reg_val, sizeof(reg_val));
 	if (ret != 0) {
-		LOG_ERR("ADS1X1X[0x%X]: error reading register 0x%X (%d)", config->bus.addr,
-			reg_addr, ret);
+		LOG_ERR("error reading register 0x%X (%d)", reg_addr, ret);
 		return ret;
 	}
 
@@ -197,11 +197,10 @@ static int ads1x1x_write_reg(const struct device *dev, enum ads1x1x_reg reg_addr
 	buf[0] = reg_addr;
 	sys_put_be16(reg_val, &buf[1]);
 
-	ret = i2c_write_dt(&config->bus, buf, sizeof(buf));
+	ret = i2c_write(config->bus, buf, sizeof(buf), 0x48);
 
 	if (ret != 0) {
-		LOG_ERR("ADS1X1X[0x%X]: error writing register 0x%X (%d)", config->bus.addr,
-			reg_addr, ret);
+		LOG_ERR("ADS1X1X error writing register 0x%X (%d)", reg_addr, ret);
 		return ret;
 	}
 
@@ -583,10 +582,12 @@ static int ads1x1x_init(const struct device *dev)
 
 	k_sem_init(&data->acq_sem, 0, 1);
 
-	if (!device_is_ready(config->bus.bus)) {
-		LOG_ERR("I2C bus %s not ready", config->bus.bus->name);
+#if 1
+	if (!device_is_ready(config->bus)) {
+		LOG_ERR("I2C bus not ready");
 		return -ENODEV;
 	}
+#endif
 
 	const k_tid_t tid =
 		k_thread_create(&data->thread, data->stack, K_THREAD_STACK_SIZEOF(data->stack),
@@ -613,7 +614,7 @@ static const struct adc_driver_api ads1x1x_api = {
 
 #define ADS1X1X_INIT(t, n, odr_delay_us, res, mux, pgab)				      \
 	static const struct ads1x1x_config ads##t##_config_##n = {			      \
-		.bus = I2C_DT_SPEC_GET(DT_INST_ADS1X1X(n, t)),				      \
+		.bus = DEVICE_DT_GET(DT_INST_BUS(0)),		\
 		.odr_delay = odr_delay_us,						      \
 		.resolution = res,							      \
 		.multiplexer = mux,							      \
